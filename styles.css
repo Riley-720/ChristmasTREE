@@ -1,0 +1,87 @@
+/* REQUIREMENT: Font Family Specification */
+body {
+    font-family: 'Georgia', serif; /* Classic, traditional feel */
+    margin: 0;
+    padding: 0;
+    background-color: #f0f4f8; /* Light "Snow" Grey-Blue */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* REQUIREMENT: Font Color Specification */
+h1, h2, h3 {
+    color: #b3000c; /* Deep Christmas Red */
+    margin-top: 0;
+}
+
+p, li {
+    color: #2c3e50; /* Dark Slate for readability */
+    line-height: 1.6;
+}
+
+/* Link Styles */
+a {
+    text-decoration: none;
+    font-weight: bold;
+    color: #0f5132; /* Forest Green */
+}
+
+a:hover {
+    text-decoration: underline;
+    color: #b3000c;
+}
+
+/* REQUIREMENT: Div Positioning 1 (Header) */
+.header-block {
+    background-color: #0f5132; /* Forest Green background */
+    width: 100%;
+    padding: 30px 0;
+    text-align: center;
+    border-bottom: 5px solid #b3000c; /* Red border */
+}
+
+/* Overriding header text colors for contrast */
+.header-block h1 {
+    color: #ffffff; 
+    margin-bottom: 10px;
+}
+.header-block a {
+    color: #ffd700; /* Gold links for the header */
+    margin: 0 15px;
+    font-family: Arial, sans-serif;
+}
+.header-block a:hover {
+    color: #ffffff;
+}
+
+/* REQUIREMENT: Div Positioning 2 (Main Content) */
+.content-block {
+    background-color: #ffffff;
+    width: 80%;
+    max-width: 800px;
+    padding: 40px;
+    margin-top: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* REQUIREMENT: Div Positioning 3 (Analytics) */
+.analytics-block {
+    background-color: #ffffff;
+    width: 80%;
+    max-width: 800px;
+    padding: 40px;
+    margin: 30px 0;
+    border-radius: 8px;
+    border-top: 4px solid #b3000c;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* Styling the video to be responsive */
+iframe {
+    width: 100%;
+    max-width: 560px;
+    display: block;
+    margin: 20px auto;
+}

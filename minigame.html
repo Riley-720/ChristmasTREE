@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Christmas Tetris</title>
+    <style>
+        /* CSS: The Visuals */
+        body {
+            background-color: #1a1a24; /* Dark Winter Night */
+            color: #fff;
+            font-family: 'Verdana', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        h1 {
+            color: #e2b032; /* Gold */
+            text-shadow: 0 0 10px rgba(226, 176, 50, 0.5);
+            margin-bottom: 10px;
+        }
+
+        /* The Game Board Border - Candy Cane Stripe Effect */
+        canvas {
+            border: 10px solid transparent;
+            border-image: repeating-linear-gradient(
+                45deg,
+                #b3000c,
+                #b3000c 10px,
+                #ffffff 10px,
+                #ffffff 20px
+            ) 10;
+            background-color: #000;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        #scoreBoard {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        .controls {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+
+        .btn {
+            margin-top: 10px;
+            padding: 10px 25px;
+            background-color: #0f5132; /* Forest Green */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .btn:hover {
+            background-color: #198754;
+        }
+        
+        a {
+            color: #aaa;
+            margin-top: 20px;
+            text-decoration: none;
+        }
+        a:hover { color: #fff; }
+    </style>
+</head>
+<body>
+
+    <h1>🎅 Holiday Stacker 🎄</h1>
+    <div id="scoreBoard">Lines Cleared: 0</div>
+    
+    <canvas id="tetris" width="240" height="400"></canvas>
+    
+    <div class="controls">
+        Controls: &#8592; Left | &#8594; Right | &#8593; Rotate | &#8595; Down
+    </div>
+    
+    <button class="btn" onclick="location.reload()">Reset Game</button>
+    <br>
+    <a href="scratch.html">Back to Christmas Traditions</a>
+
+    <script>
+        // JAVASCRIPT: The Game Logic
+        const cvs = document.getElementById("tetris");
+        const ctx = cvs.getContext("2d");
+        const scoreElement = document.getElementById("scoreBoard");
+
+        const ROW = 20;
+        const COL = 10;
+        const SQ = 20;
+        const VACANT = "BLACK"; // Empty square color
+
+        // 1. DEFINE SHAPES FIRST (Fixes the startup error)
+        const I = [
+            [[0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]],
+            [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]],
+            [[0, 0, 0, 0], [0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0]],
+            [[0, 1, 0, 0], [0, 1, 0, 0], [0, 1, 0, 0], [0, 1, 0, 0]]
+        ];
+
+        const J = [
+            [[1, 0, 0], [1, 1, 1], [0, 0, 0]],
+            [[0, 1, 1], [0, 1, 0], [0, 1, 0]],
+            [[0, 0, 0], [1, 1, 1], [0, 0, 1]],
+            [[0, 1, 0], [0, 1, 0], [1, 1, 0]]
+        ];
+
+        const L = [
+            [[0, 0, 1], [1, 1, 1], [0, 0, 0]],
+            [[0, 1, 0], [0, 1, 0], [0, 1, 1]],
+            [[0, 0, 0], [1, 1, 1], [1, 0, 0]],
+            [[1, 1, 0], [0, 1, 0], [0, 1, 0]]
+        ];
+
+        const O = [
+            [[0, 0, 0, 0], [0, 1, 1, 0], [0, 1, 1, 0], [0, 0, 0, 0]]
+        ];
+
+        const S = [
+            [[0, 1, 1], [1, 1, 0], [0, 0, 0]],
+            [[0, 1, 0], [0, 1, 1], [0, 0, 1]],
+            [[0, 0, 0], [0, 1, 1], [1, 1, 0]],
+            [[1, 0, 0], [1, 1, 0], [0, 1, 0]]
+        ];
+
+        const T = [
+            [[0, 1, 0], [1, 1, 1], [0, 0, 0]],
+            [[0, 1, 0], [0, 1, 1], [0, 1, 0]],
+            [[0, 0, 0], [1, 1, 1], [0, 1, 0]],
+            [[0, 1, 0], [1, 1, 0], [0, 1, 0]]
+        ];
+
+        const Z = [
+            [[1, 1, 0], [0, 1, 1], [0, 0, 0]],
+            [[0, 0, 1], [0, 1, 1], [0, 1, 0]],
+            [[0, 0, 0], [1, 1, 0], [0, 1, 1]],
+            [[0, 1, 0], [1, 1, 0], [1, 0, 0]]
+        ];
+
+        // 2. DEFINE PIECES ARRAY (Now that shapes exist)
+        const PIECES = [
+            [Z, "#b3000c"], // Red
+            [S, "#0f5132"], // Green
+            [T, "#e2b032"], // Gold
+            [O, "#ffffff"], // White
+            [L, "#d35400"], // Orange
+            [I, "#3498db"], // Ice Blue
+            [J, "#8e44ad"]  // Purple
+        ];
+
+        // 3. GAME LOGIC
+        function drawSquare(x, y, color) {
+            ctx.fillStyle = color;
+            ctx.fillRect(x * SQ, y * SQ, SQ, SQ);
+            ctx.strokeStyle = "rgba(255,255,255,0.2)";
+            ctx.strokeRect(x * SQ, y * SQ, SQ, SQ);
+        }
+
+        let board = [];
+        for (let r = 0; r < ROW; r++) {
+            board[r] = [];
+            for (let c = 0; c < COL; c++) {
+                board[r][c] = VACANT;
+            }
+        }
+
+        function drawBoard() {
+            for (let r = 0; r < ROW; r++) {
+                for (let c = 0; c < COL; c++) {
+                    drawSquare(c, r, board[r][c]);
+                }
+            }
+        }
+        drawBoard();
+
+        function randomPiece() {
+            let r = Math.floor(Math.random() * PIECES.length);
+            return new Piece(PIECES[r][0], PIECES[r][1]);
+        }
+
+        function Piece(tetromino, color) {
+            this.tetromino = tetromino;
+            this.color = color;
+            this.tetrominoN = 0;
+            this.activeTetromino = this.tetromino[this.tetrominoN];
+            this.x = 3;
+            this.y = -2;
+        }
+
+        Piece.prototype.fill = function(color) {
+            for (let r = 0; r < this.activeTetromino.length; r++) {
+                for (let c = 0; c < this.activeTetromino.length; c++) {
+                    if (this.activeTetromino[r][c]) {
+                        drawSquare(this.x + c, this.y + r, color);
+                    }
+                }
+            }
+        }
+
+        Piece.prototype.draw = function() {
+            this.fill(this.color);
+        }
+
+        Piece.prototype.unDraw = function() {
+            this.fill(VACANT);
+        }
+
+        Piece.prototype.moveDown = function() {
+            if (!this.collision(0, 1, this.activeTetromino)) {
+                this.unDraw();
+                this.y++;
+                this.draw();
+            } else {
+                this.lock();
+                p = randomPiece();
+            }
+        }
+
+        Piece.prototype.moveRight = function() {
+            if (!this.collision(1, 0, this.activeTetromino)) {
+                this.unDraw();
+                this.x++;
+                this.draw();
+            }
+        }
+
+        Piece.prototype.moveLeft = function() {
+            if (!this.collision(-1, 0, this.activeTetromino)) {
+                this.unDraw();
+                this.x--;
+                this.draw();
+            }
+        }
+
+        Piece.prototype.rotate = function() {
+            let nextPattern = this.tetromino[(this.tetrominoN + 1) % this.tetromino.length];
+            let kick = 0;
+            if (this.collision(0, 0, nextPattern)) {
+                if (this.x > COL / 2) kick = -1;
+                else kick = 1;
+            }
+            if (!this.collision(kick, 0, nextPattern)) {
+                this.unDraw();
+                this.x += kick;
+                this.tetrominoN = (this.tetrominoN + 1) % this.tetromino.length;
+                this.activeTetromino = this.tetromino[this.tetrominoN];
+                this.draw();
+            }
+        }
+
+        let score = 0;
+
+        Piece.prototype.lock = function() {
+            for (let r = 0; r < this.activeTetromino.length; r++) {
+                for (let c = 0; c < this.activeTetromino.length; c++) {
+                    if (!this.activeTetromino[r][c]) continue;
+                    if (this.y + r < 0) {
+                        alert("Game Over! The stockings were hung too high.");
+                        gameOver = true;
+                        break;
+                    }
+                    board[this.y + r][this.x + c] = this.color;
+                }
+            }
+            for (let r = 0; r < ROW; r++) {
+                let isRowFull = true;
+                for (let c = 0; c < COL; c++) {
+                    isRowFull = isRowFull && (board[r][c] != VACANT);
+                }
+                if (isRowFull) {
+                    for (let y = r; y > 1; y--) {
+                        for (let c = 0; c < COL; c++) {
+                            board[y][c] = board[y - 1][c];
+                        }
+                    }
+                    for (let c = 0; c < COL; c++) board[0][c] = VACANT;
+                    score += 1;
+                }
+            }
+            drawBoard();
+            scoreElement.innerHTML = "Lines Cleared: " + score;
+        }
+
+        Piece.prototype.collision = function(x, y, piece) {
+            for (let r = 0; r < piece.length; r++) {
+                for (let c = 0; c < piece.length; c++) {
+                    if (!piece[r][c]) continue;
+                    let newX = this.x + c + x;
+                    let newY = this.y + r + y;
+                    if (newX < 0 || newX >= COL || newY >= ROW) return true;
+                    if (newY < 0) continue;
+                    if (board[newY][newX] != VACANT) return true;
+                }
+            }
+            return false;
+        }
+
+        document.addEventListener("keydown", CONTROL);
+        function CONTROL(event) {
+            if (event.keyCode == 37) p.moveLeft();
+            else if (event.keyCode == 38) p.rotate();
+            else if (event.keyCode == 39) p.moveRight();
+            else if (event.keyCode == 40) p.moveDown();
+        }
+
+        let dropStart = Date.now();
+        let gameOver = false;
+        let p = randomPiece();
+
+        function drop() {
+            let now = Date.now();
+            let delta = now - dropStart;
+            if (delta > 1000) {
+                p.moveDown();
+                dropStart = Date.now();
+            }
+            if (!gameOver) requestAnimationFrame(drop);
+        }
+        drop();
+    </script>
+</body>
+</html>
